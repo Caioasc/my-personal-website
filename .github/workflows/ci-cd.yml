@@ -76,25 +76,31 @@ jobs:
           if [ -d "out" ]; then
             mkdir -p deployment
             cp -r out/* deployment/
+            echo "📁 Deployment files prepared:"
+            ls -la deployment/
           else
             echo "Error: out directory not found. Static export failed."
             exit 1
           fi
           
-      - name: 🚀 Deploy via FTP with Alternative Action
-        uses: sebastianpopp/ftp-action@releases/v2
+      - name: 🚀 Deploy via FTP (Updated Action)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          host: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          user: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          localDir: "./deployment/"
-          remoteDir: "./public_html/"
+          local-dir: ./deployment/
+          server-dir: ./public_html/
+          protocol: ftp
+          port: 21
+          log-level: verbose
             
       - name: 📧 Deployment notification
         if: success()
         run: |
           echo "✅ Deployment successful!"
           echo "🌐 Website: https://caiocastilho.com"
+          echo "⏰ Allow 2-5 minutes for propagation"
           
   # ===============================
   # SECURITY & MONITORING
