@@ -13,6 +13,7 @@ on:
         - multi-protocol-fallback
         - debug-intensive
         - network-diagnostic
+        - github-actions-optimized
 
 env:
   NODE_VERSION: '18.x'
@@ -136,6 +137,30 @@ jobs:
             **/Thumbs.db
             **/*.map
 
+      # GITHUB ACTIONS OPTIMIZED DEPLOYMENT (NEW)
+      - name: 🎯 GitHub Actions Optimized Deployment
+        if: ${{ github.event.inputs.deployment_strategy == 'github-actions-optimized' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: 185.239.210.65
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          local-dir: ./deployment/
+          server-dir: ./public_html/
+          protocol: ftp
+          port: 21
+          log-level: verbose
+          dangerous-clean-slate: true
+          timeout: 240000
+          security: loose
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.DS_Store
+            **/Thumbs.db
+            **/*.map
+
       # MULTI-PROTOCOL FALLBACK SYSTEM
       - name: 🔄 Fallback Step 1 - Standard FTP
         if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' }}
@@ -172,6 +197,8 @@ jobs:
       - name: 🔄 Fallback Step 3 - FTPS Secure
         if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' && steps.standard-ftp.outcome == 'failure' && steps.ip-ftp.outcome == 'failure' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        continue-on-error: true
+        id: ftps-secure
         with:
           server: files.hostinger.com
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
@@ -182,6 +209,16 @@ jobs:
           port: 990
           timeout: 150000
 
+      - name: 🔄 Fallback Step 4 - Alternative FTP Action
+        if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' && steps.standard-ftp.outcome == 'failure' && steps.ip-ftp.outcome == 'failure' && steps.ftps-secure.outcome == 'failure' }}
+        uses: sebastianpopp/ftp-action@releases/v2
+        with:
+          host: ${{ secrets.HOSTINGER_FTP_USERNAME }}@185.239.210.65
+          user: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          localDir: deployment
+          remoteDir: public_html
+
       - name: 🔄 Fallback Results Summary
         if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' }}
         run: |
@@ -189,13 +226,16 @@ jobs:
           echo "=============================="
           echo "Standard FTP: ${{ steps.standard-ftp.outcome }}"
           echo "IP-based FTP: ${{ steps.ip-ftp.outcome }}"
+          echo "FTPS Secure: ${{ steps.ftps-secure.outcome }}"
           
           if [ "${{ steps.standard-ftp.outcome }}" = "success" ]; then
             echo "✅ Deployment successful via Standard FTP"
           elif [ "${{ steps.ip-ftp.outcome }}" = "success" ]; then
             echo "✅ Deployment successful via IP-based FTP"
+          elif [ "${{ steps.ftps-secure.outcome }}" = "success" ]; then
+            echo "✅ Deployment successful via FTPS Secure"
           else
-            echo "⚠️ Primary methods failed, attempting FTPS..."
+            echo "⚠️ Primary methods failed, attempted alternative action"
           fi
 
       # DEBUG INTENSIVE MODE
@@ -212,6 +252,9 @@ jobs:
           echo ""
           echo "DNS Resolution Analysis:"
           dig files.hostinger.com A +short || nslookup files.hostinger.com
+          echo ""
+          echo "GitHub Actions IP Ranges:"
+          curl -s https://api.github.com/meta | jq -r '.actions[]' | head -5 || echo "Could not fetch IP ranges"
           echo ""
           echo "Traceroute to Hostinger:"
           traceroute -n -m 5 files.hostinger.com 2>/dev/null | head -10 || echo "Traceroute unavailable"
@@ -257,6 +300,12 @@ jobs:
           echo "Runner OS: ${{ runner.os }}"
           echo "Public IP: $(curl -s ifconfig.me 2>/dev/null || echo 'Unknown')"
           echo "DNS Servers: $(cat /etc/resolv.conf | grep nameserver || echo 'Unknown')"
+          echo ""
+          
+          # Specific ETIMEDOUT analysis
+          echo "🎯 ETIMEDOUT Error Analysis:"
+          echo "Problematic IPs identified: 153.92.2.11, 153.92.2.12"
+          echo "IPv6 issues: 2a02:4780::b, 2a02:4780::a"
           echo ""
           
           # Server connectivity matrix
