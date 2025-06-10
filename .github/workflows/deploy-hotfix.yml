@@ -1,5 +1,5 @@
 # /Users/user/Desktop/Core Guild Project/projects/colabs/eng-teams/core/personal-website/prototype/.github/workflows/deploy-hotfix.yml
-# Hotfix deployment workflow with multiple deployment methods and correct Hostinger formats
+# Professional FTP deployment workflow using industry best practices
 name: 🚑 Hotfix Deploy
 
 on:
@@ -8,14 +8,11 @@ on:
       deployment_method:
         description: 'Choose deployment method'
         required: true
-        default: 'debug-and-deploy'
+        default: 'industry-standard'
         type: choice
         options:
-        - debug-and-deploy
-        - auto-detect-server
-        - ftp-hostinger-v2
-        - ftp-ip-fallback
-        - sftp-secure
+        - industry-standard
+        - debug-deployment
         - manual-debug
 
 jobs:
@@ -45,14 +42,12 @@ jobs:
           cp -r out/* deployment/
           echo "📁 Deployment files prepared:"
           ls -la deployment/
-          echo "📄 Checking index.html content:"
-          head -5 deployment/index.html
           echo "📊 Total files to deploy:"
           find deployment/ -type f | wc -l
           
-      - name: 🔍 Debug and Deploy with Verification
-        if: ${{ github.event.inputs.deployment_method == 'debug-and-deploy' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: 🧹 Industry Standard Deployment (Recommended)
+        if: ${{ github.event.inputs.deployment_method == 'industry-standard' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: files.hostinger.com
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
@@ -62,35 +57,19 @@ jobs:
           protocol: ftp
           port: 21
           log-level: verbose
-          dry-run: false
           dangerous-clean-slate: true
+          timeout: 60000
+          security: loose
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.DS_Store
+            **/Thumbs.db
           
-      - name: 🧪 Post-Deploy Verification
-        if: ${{ github.event.inputs.deployment_method == 'debug-and-deploy' }}
-        run: |
-          echo "⏳ Waiting 30 seconds for propagation..."
-          sleep 30
-          echo "🌐 Testing website accessibility:"
-          curl -I https://caiocastilho.com || echo "❌ Site not accessible yet"
-          echo "🔍 Testing if our content is live:"
-          curl -s https://caiocastilho.com | grep -q "Caio A. S. Castilho" && echo "✅ Our content is live!" || echo "❌ Still showing default page"
-          
-      - name: 🔍 Auto-Detect Server Format
-        if: ${{ github.event.inputs.deployment_method == 'auto-detect-server' }}
-        run: |
-          echo "🔍 Testing server connectivity..."
-          echo "Testing format 1: files.hostinger.com"
-          ping -c 2 files.hostinger.com || echo "❌ files.hostinger.com failed"
-          echo "Testing format 2: IP address"
-          ping -c 2 185.239.210.65 || echo "❌ IP address failed"
-          echo "Testing format 3: ftp.hostinger.com"
-          ping -c 2 ftp.hostinger.com || echo "❌ ftp.hostinger.com failed"
-          echo "📝 Use the working server format in GitHub Secrets"
-          
-      - name: 🚀 Deploy via files.hostinger.com
-        if: ${{ github.event.inputs.deployment_method == 'auto-detect-server' }}
-        continue-on-error: true
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: 🔧 Debug Deployment with Extensive Logging
+        if: ${{ github.event.inputs.deployment_method == 'debug-deployment' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: files.hostinger.com
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
@@ -100,79 +79,96 @@ jobs:
           protocol: ftp
           port: 21
           log-level: verbose
+          dangerous-clean-slate: true
+          timeout: 120000
+          security: loose
+          dry-run: false
           
-      - name: 🚀 Deploy via IP Fallback (if first failed)
-        if: ${{ github.event.inputs.deployment_method == 'auto-detect-server' && failure() }}
-        continue-on-error: true
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: 185.239.210.65
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          local-dir: ./deployment/
-          server-dir: ./public_html/
-          protocol: ftp
-          port: 21
-          log-level: verbose
+      - name: ⏳ Wait for file propagation
+        if: ${{ github.event.inputs.deployment_method != 'manual-debug' }}
+        run: |
+          echo "⏳ Waiting 60 seconds for file propagation..."
+          sleep 60
           
-      - name: 🚀 Deploy via Hostinger FTP (Correct Format)
-        if: ${{ github.event.inputs.deployment_method == 'ftp-hostinger-v2' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          local-dir: ./deployment/
-          server-dir: ./public_html/
-          protocol: ftp
-          port: 21
-          log-level: verbose
+      - name: 🧪 Professional Verification
+        if: ${{ github.event.inputs.deployment_method != 'manual-debug' }}
+        run: |
+          echo "🔍 Professional deployment verification..."
           
-      - name: 🚀 Deploy via IP Fallback
-        if: ${{ github.event.inputs.deployment_method == 'ftp-ip-fallback' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: 185.239.210.65
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          local-dir: ./deployment/
-          server-dir: ./public_html/
-          protocol: ftp
-          port: 21
-          log-level: verbose
+          # Test 1: Basic connectivity
+          echo "📡 Test 1: Website accessibility"
+          if curl -I https://caiocastilho.com --connect-timeout 15 -w "%{http_code}" | grep -q "200"; then
+            echo "✅ Website is accessible (HTTP 200)"
+          else
+            echo "⚠️ Website returned non-200 status"
+          fi
           
-      - name: 🔒 Deploy via SFTP (Secure)
-        if: ${{ github.event.inputs.deployment_method == 'sftp-secure' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          local-dir: ./deployment/
-          server-dir: ./public_html/
-          protocol: sftp
-          port: 22
-          log-level: verbose
+          # Test 2: Content verification
+          echo "🔍 Test 2: Content verification"
+          CONTENT=$(curl -s https://caiocastilho.com --connect-timeout 15)
           
-      - name: 🔍 Debug Connection Info
+          if echo "$CONTENT" | grep -q "Caio A. S. Castilho"; then
+            echo "✅ SUCCESS: Our professional content is LIVE!"
+            echo "🎉 Website deployed successfully!"
+            echo "🌐 Access: https://caiocastilho.com"
+          elif echo "$CONTENT" | grep -q "Está tudo pronto"; then
+            echo "❌ ISSUE: Default Hostinger page still showing"
+            echo "🔄 Files were uploaded but may not have replaced existing content"
+            echo "📝 Manual verification needed in hPanel File Manager"
+          else
+            echo "⚠️ Unexpected content or connection issue"
+            echo "📄 Content preview:"
+            echo "$CONTENT" | head -10
+          fi
+          
+          # Test 3: Technical verification
+          echo "📄 Test 3: Technical structure"
+          if echo "$CONTENT" | grep -q "Mechatronic Engineer"; then
+            echo "✅ Professional title found"
+          fi
+          
+          if echo "$CONTENT" | grep -q "github.com/Caioasc"; then
+            echo "✅ Social links working"
+          fi
+          
+          if echo "$CONTENT" | grep -q "_next/static"; then
+            echo "✅ Next.js static assets detected"
+          fi
+          
+      - name: 🔍 Manual Debug Information
         if: ${{ github.event.inputs.deployment_method == 'manual-debug' }}
         run: |
-          echo "🔍 Testing connection parameters..."
-          echo "🌐 Testing server connectivity..."
-          echo "📝 Credential format verification needed"
-          echo "⚠️  Check hPanel for correct FTP details"
-          echo "🔧 Server should be hostname, not IP"
-          echo "👤 Username should be format: u12345678"
-          echo "🔑 Password should be FTP password (not SSH)"
+          echo "🔍 Manual Debug Information"
+          echo "========================="
+          echo "🌐 Domain: caiocastilho.com"
+          echo "📁 FTP Server: files.hostinger.com"
+          echo "👤 Username: u300282944"
+          echo "📂 Target Directory: public_html"
+          echo "🔑 Password: Check GitHub Secrets"
           echo ""
-          echo "🧪 Testing common Hostinger server formats:"
-          ping -c 2 files.hostinger.com || echo "❌ files.hostinger.com failed"
-          ping -c 2 ftp.hostinger.com || echo "❌ ftp.hostinger.com failed" 
-          ping -c 2 185.239.210.65 || echo "❌ IP failed"
+          echo "🧪 Testing connectivity:"
+          ping -c 3 files.hostinger.com || echo "❌ Server not reachable"
+          echo ""
+          echo "📝 Recommended manual steps:"
+          echo "1. Login to hPanel File Manager"
+          echo "2. Navigate to public_html directory"
+          echo "3. Delete ALL existing files"
+          echo "4. Upload files from 'out' directory"
+          echo "5. Verify index.html is in root of public_html"
           
-      - name: ✅ Deployment Success
-        if: success()
+      - name: 📊 Deployment Summary
+        if: always()
         run: |
-          echo "🎉 Deployment completed successfully!"
-          echo "🌐 Website should be live at: https://caiocastilho.com"
-          echo "⏰ Allow 2-5 minutes for propagation" 
+          echo "📊 DEPLOYMENT SUMMARY"
+          echo "===================="
+          echo "🌐 Domain: caiocastilho.com"
+          echo "📦 Files deployed: $(find deployment/ -type f | wc -l)"
+          echo "💾 Package size: $(du -sh deployment/ | cut -f1)"
+          echo "⏰ Deployment time: $(date -u)"
+          echo "🎯 Method: ${{ github.event.inputs.deployment_method }}"
+          echo ""
+          echo "🔗 Next steps:"
+          echo "- Access: https://caiocastilho.com"
+          echo "- Verify all pages work"
+          echo "- Test mobile responsiveness"
+          echo "- Check social media links" 
