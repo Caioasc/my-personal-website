@@ -73,12 +73,8 @@ jobs:
       - name: 📦 Create deployment package
         run: |
           mkdir deployment
-          cp -r .next deployment/
-          cp -r public deployment/
-          cp package*.json deployment/
-          cp -r components deployment/
-          cp -r pages deployment/
-          cp -r styles deployment/
+          cp -r out/* deployment/ || cp -r .next/static deployment/
+          cp -r public/* deployment/ 2>/dev/null || true
           
       - name: 🚀 Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
