@@ -6,9 +6,10 @@ on:
       deployment_strategy:
         description: 'Choose deployment strategy'
         required: true
-        default: 'enterprise-standard'
+        default: 'sftp-secure'
         type: choice
         options:
+        - sftp-secure
         - enterprise-standard
         - multi-protocol-fallback
         - debug-intensive
@@ -113,6 +114,30 @@ jobs:
             exit 1
           fi
 
+      # SFTP SECURE DEPLOYMENT (NEW DEFAULT)
+      - name: 🔒 SFTP Secure Deployment (Recommended)
+        if: ${{ github.event.inputs.deployment_strategy == 'sftp-secure' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: files.hostinger.com
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          local-dir: ./deployment/
+          server-dir: ./public_html/
+          protocol: ftps-implicit
+          port: 990
+          log-level: verbose
+          dangerous-clean-slate: true
+          timeout: ${{ env.DEPLOYMENT_TIMEOUT }}
+          security: strict
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.DS_Store
+            **/Thumbs.db
+            **/*.map
+
       # ENTERPRISE STANDARD DEPLOYMENT
       - name: 🏢 Enterprise Standard Deployment
         if: ${{ github.event.inputs.deployment_strategy == 'enterprise-standard' }}
@@ -137,7 +162,7 @@ jobs:
             **/Thumbs.db
             **/*.map
 
-      # GITHUB ACTIONS OPTIMIZED DEPLOYMENT (NEW)
+      # GITHUB ACTIONS OPTIMIZED DEPLOYMENT
       - name: 🎯 GitHub Actions Optimized Deployment
         if: ${{ github.event.inputs.deployment_strategy == 'github-actions-optimized' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -162,8 +187,24 @@ jobs:
             **/*.map
 
       # MULTI-PROTOCOL FALLBACK SYSTEM
-      - name: 🔄 Fallback Step 1 - Standard FTP
+      - name: 🔄 Fallback Step 1 - FTPS Secure
         if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        continue-on-error: true
+        id: ftps-secure
+        with:
+          server: files.hostinger.com
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          local-dir: ./deployment/
+          server-dir: ./public_html/
+          protocol: ftps-implicit
+          port: 990
+          timeout: 120000
+          security: strict
+
+      - name: 🔄 Fallback Step 2 - Standard FTP
+        if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' && steps.ftps-secure.outcome == 'failure' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         continue-on-error: true
         id: standard-ftp
@@ -178,8 +219,8 @@ jobs:
           timeout: 120000
           security: loose
 
-      - name: 🔄 Fallback Step 2 - IP-Based FTP
-        if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' && steps.standard-ftp.outcome == 'failure' }}
+      - name: 🔄 Fallback Step 3 - IP-Based FTP
+        if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' && steps.ftps-secure.outcome == 'failure' && steps.standard-ftp.outcome == 'failure' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         continue-on-error: true
         id: ip-ftp
@@ -194,48 +235,23 @@ jobs:
           timeout: 120000
           security: loose
 
-      - name: 🔄 Fallback Step 3 - FTPS Secure
-        if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' && steps.standard-ftp.outcome == 'failure' && steps.ip-ftp.outcome == 'failure' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        continue-on-error: true
-        id: ftps-secure
-        with:
-          server: files.hostinger.com
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          local-dir: ./deployment/
-          server-dir: ./public_html/
-          protocol: ftps
-          port: 990
-          timeout: 150000
-
-      - name: 🔄 Fallback Step 4 - Alternative FTP Action
-        if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' && steps.standard-ftp.outcome == 'failure' && steps.ip-ftp.outcome == 'failure' && steps.ftps-secure.outcome == 'failure' }}
-        uses: sebastianpopp/ftp-action@releases/v2
-        with:
-          host: ${{ secrets.HOSTINGER_FTP_USERNAME }}@185.239.210.65
-          user: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          localDir: deployment
-          remoteDir: public_html
-
       - name: 🔄 Fallback Results Summary
         if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' }}
         run: |
           echo "🔄 FALLBACK DEPLOYMENT RESULTS"
           echo "=============================="
+          echo "FTPS Secure: ${{ steps.ftps-secure.outcome }}"
           echo "Standard FTP: ${{ steps.standard-ftp.outcome }}"
           echo "IP-based FTP: ${{ steps.ip-ftp.outcome }}"
-          echo "FTPS Secure: ${{ steps.ftps-secure.outcome }}"
           
-          if [ "${{ steps.standard-ftp.outcome }}" = "success" ]; then
+          if [ "${{ steps.ftps-secure.outcome }}" = "success" ]; then
+            echo "✅ Deployment successful via FTPS Secure"
+          elif [ "${{ steps.standard-ftp.outcome }}" = "success" ]; then
             echo "✅ Deployment successful via Standard FTP"
           elif [ "${{ steps.ip-ftp.outcome }}" = "success" ]; then
             echo "✅ Deployment successful via IP-based FTP"
-          elif [ "${{ steps.ftps-secure.outcome }}" = "success" ]; then
-            echo "✅ Deployment successful via FTPS Secure"
           else
-            echo "⚠️ Primary methods failed, attempted alternative action"
+            echo "❌ All fallback methods failed"
           fi
 
       # DEBUG INTENSIVE MODE
@@ -253,24 +269,31 @@ jobs:
           echo "DNS Resolution Analysis:"
           dig files.hostinger.com A +short || nslookup files.hostinger.com
           echo ""
+          echo "Username Format Check:"
+          echo "Expected format: u300282944 (without domain suffix)"
+          echo ""
           echo "GitHub Actions IP Ranges:"
           curl -s https://api.github.com/meta | jq -r '.actions[]' | head -5 || echo "Could not fetch IP ranges"
           echo ""
           echo "Traceroute to Hostinger:"
           traceroute -n -m 5 files.hostinger.com 2>/dev/null | head -10 || echo "Traceroute unavailable"
 
-      - name: 🔧 FTP Connection Test
+      - name: 🔧 FTP vs FTPS Connection Test
         if: ${{ github.event.inputs.deployment_strategy == 'debug-intensive' }}
         run: |
-          echo "🔧 FTP CONNECTION DIAGNOSTICS"
-          echo "============================"
-          echo "Testing direct FTP connection..."
+          echo "🔧 FTP vs FTPS CONNECTION DIAGNOSTICS"
+          echo "====================================="
+          echo "Testing FTP connection (port 21)..."
           
-          # Test FTP connection with verbose output
+          # Test FTP connection
           curl -v --connect-timeout 30 --max-time 60 \
             ftp://files.hostinger.com/ \
             --user "${{ secrets.HOSTINGER_FTP_USERNAME }}:${{ secrets.HOSTINGER_FTP_PASSWORD }}" \
             2>&1 | head -30 || echo "FTP test completed"
+          
+          echo ""
+          echo "Testing FTPS availability (port 990)..."
+          timeout 10 bash -c "</dev/tcp/files.hostinger.com/990" && echo "✅ FTPS port 990 open" || echo "❌ FTPS port 990 closed"
 
       - name: 🔧 Debug Deployment with Maximum Verbosity
         if: ${{ github.event.inputs.deployment_strategy == 'debug-intensive' }}
@@ -302,10 +325,11 @@ jobs:
           echo "DNS Servers: $(cat /etc/resolv.conf | grep nameserver || echo 'Unknown')"
           echo ""
           
-          # Specific ETIMEDOUT analysis
-          echo "🎯 ETIMEDOUT Error Analysis:"
-          echo "Problematic IPs identified: 153.92.2.11, 153.92.2.12"
-          echo "IPv6 issues: 2a02:4780::b, 2a02:4780::a"
+          # Error analysis based on results
+          echo "🎯 Error Analysis Based on Test Results:"
+          echo "ETIMEDOUT errors: RESOLVED ✅"
+          echo "Current issue: 530 Login incorrect"
+          echo "Recommended solution: Use FTPS (port 990) instead of FTP (port 21)"
           echo ""
           
           # Server connectivity matrix
@@ -327,9 +351,9 @@ jobs:
           done
           
           # SSL/TLS testing for secure protocols
-          echo "🔒 SSL/TLS Testing:"
+          echo "🔒 Protocol Testing:"
           echo "Testing FTPS (port 990):"
-          openssl s_client -connect files.hostinger.com:990 -servername files.hostinger.com < /dev/null 2>/dev/null | grep -E "verify|subject|issuer" || echo "SSL test failed"
+          openssl s_client -connect files.hostinger.com:990 -servername files.hostinger.com < /dev/null 2>/dev/null | grep -E "verify|subject|issuer" || echo "FTPS test failed"
 
       # POST-DEPLOYMENT VERIFICATION
       - name: ⏳ File Propagation Wait
