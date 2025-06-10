@@ -8,9 +8,10 @@ on:
       deployment_method:
         description: 'Choose deployment method'
         required: true
-        default: 'auto-detect-server'
+        default: 'debug-and-deploy'
         type: choice
         options:
+        - debug-and-deploy
         - auto-detect-server
         - ftp-hostinger-v2
         - ftp-ip-fallback
@@ -44,6 +45,35 @@ jobs:
           cp -r out/* deployment/
           echo "📁 Deployment files prepared:"
           ls -la deployment/
+          echo "📄 Checking index.html content:"
+          head -5 deployment/index.html
+          echo "📊 Total files to deploy:"
+          find deployment/ -type f | wc -l
+          
+      - name: 🔍 Debug and Deploy with Verification
+        if: ${{ github.event.inputs.deployment_method == 'debug-and-deploy' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: files.hostinger.com
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          local-dir: ./deployment/
+          server-dir: ./public_html/
+          protocol: ftp
+          port: 21
+          log-level: verbose
+          dry-run: false
+          dangerous-clean-slate: true
+          
+      - name: 🧪 Post-Deploy Verification
+        if: ${{ github.event.inputs.deployment_method == 'debug-and-deploy' }}
+        run: |
+          echo "⏳ Waiting 30 seconds for propagation..."
+          sleep 30
+          echo "🌐 Testing website accessibility:"
+          curl -I https://caiocastilho.com || echo "❌ Site not accessible yet"
+          echo "🔍 Testing if our content is live:"
+          curl -s https://caiocastilho.com | grep -q "Caio A. S. Castilho" && echo "✅ Our content is live!" || echo "❌ Still showing default page"
           
       - name: 🔍 Auto-Detect Server Format
         if: ${{ github.event.inputs.deployment_method == 'auto-detect-server' }}
