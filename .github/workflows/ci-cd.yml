@@ -81,19 +81,14 @@ jobs:
             exit 1
           fi
           
-      - name: 🚀 Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: 🚀 Deploy via FTP with Alternative Action
+        uses: sebastianpopp/ftp-action@releases/v2
         with:
-          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          host: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          user: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          local-dir: ./deployment/
-          server-dir: ./public_html/
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/.env
+          localDir: "./deployment/"
+          remoteDir: "./public_html/"
             
       - name: 📧 Deployment notification
         if: success()
