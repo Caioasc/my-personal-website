@@ -61,7 +61,7 @@ export default function Layout({ children }) {
         <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" />
         
-        <script defer data-domain="katherineoelsner.com" src="https://plausible.io/js/plausible.js"></script>
+        <script defer data-domain="caiocastilho.com" src="https://plausible.io/js/plausible.js"></script>
       </Head>
       <div
         style={{ minWidth: '24rem', maxWidth: '37rem' }}
@@ -94,22 +94,25 @@ export default function Layout({ children }) {
         <motion.div layoutId="social-icons" className="flex items-center justify-center">
           <a
             className="text-gray-400 dark:text-white hover:text-lightBlue-600 dark:hover:text-pink-500"
-            href="https://github.com/octokatherine"
+            href="https://github.com/Caioasc"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <FontAwesomeIcon className="mr-6 text-2xl " icon={faGithub} />
           </a>
           <a
             className="text-gray-400 dark:text-white hover:text-lightBlue-600 dark:hover:text-pink-500"
-            href="https://twitter.com/katherinecodes"
+            href="https://twitter.com/caiocastilho"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <FontAwesomeIcon className="mr-6 text-2xl" icon={faTwitter} />
           </a>
           <a
             className="text-gray-400 dark:text-white hover:text-lightBlue-600 dark:hover:text-pink-500"
-            href="https://www.linkedin.com/in/katherineoelsner/"
+            href="https://www.linkedin.com/in/caiocastilho/"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <FontAwesomeIcon className="mr-6 text-2xl" icon={faLinkedinIn} />
           </a>
