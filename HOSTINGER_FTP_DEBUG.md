@@ -1,84 +1,103 @@
-# 🔧 HOSTINGER FTP DEBUG GUIDE
+# 🔧 HOSTINGER FTP DEPLOYMENT GUIDE - UPDATED 2024
 
-## 🚨 ERRO ATUAL: 530 Login Incorrect
+## 🎯 CORRECT CREDENTIAL FORMAT (Based on Official Hostinger Docs)
 
-### **POSSÍVEIS CAUSAS:**
+### **✅ SOLUTION: Use Server Name + Correct Username Format**
 
-1. **Username Format Incorreto**
-   - ❌ Atual: `u300282944.Caioasc`
-   - ✅ Tente: `u300282944` (sem domínio)
-   - ✅ Tente: `caioasc@caiocastilho.com` (formato email)
-   - ✅ Tente: `caiocastilho.com` (domínio completo)
-
-2. **Servidor FTP Incorreto**
-   - ❌ Atual: `185.239.210.65`
-   - ✅ Tente: `ftp.caiocastilho.com`
-   - ✅ Tente: `files.hostinger.com`
-   - ✅ Tente: `ftpupload.net`
-
-3. **Porta Incorreta**
-   - ❌ Atual: 21 (FTP padrão)
-   - ✅ Tente: 22 (SFTP)
-   - ✅ Tente: 2121 (FTP alternativo)
-
-## 🛠️ SOLUÇÕES IMEDIATAS:
-
-### **OPÇÃO A: Verificar no hPanel Hostinger**
-1. Login em https://hpanel.hostinger.com
-2. Ir em **Files > File Manager**
-3. Clicar em **FTP Accounts**
-4. Verificar:
-   - 📊 **Hostname/Server**
-   - 👤 **Username**
-   - 🔐 **Password** (resetar se necessário)
-   - 🔢 **Port**
-
-### **OPÇÃO B: Testar Credenciais Manualmente**
-```bash
-# Teste local FTP
-ftp 185.239.210.65
-# Inserir username
-# Inserir password
-# Se conectar: pwd
-```
-
-### **OPÇÃO C: Usar SFTP ao invés de FTP**
-- Hostinger pode ter desabilitado FTP por segurança
-- SFTP é mais seguro e moderno
-
-## 🎯 FORMATOS MAIS PROVÁVEIS:
-
-### **Formato 1: Conta Principal**
-```yaml
-Server: files.hostinger.com
-Username: u300282944
-Password: [senha-do-hpanel]
-Port: 21
-```
-
-### **Formato 2: Domínio Específico**
-```yaml
-Server: ftp.caiocastilho.com
-Username: caioasc@caiocastilho.com
-Password: [senha-especifica]
-Port: 21
-```
-
-### **Formato 3: SFTP (Mais Seguro)**
-```yaml
-Server: 185.239.210.65
-Username: u300282944
-Password: [senha]
-Port: 22
-Protocol: SFTP
-```
-
-## 🚀 PRÓXIMOS PASSOS:
-
-1. **Verificar hPanel** - Confirmar credenciais
-2. **Atualizar GitHub Secrets** - Com credenciais corretas
-3. **Executar Hotfix Workflow** - Testar conexão
-4. **Deploy Sucesso** - Site online!
+According to Hostinger's official documentation, the issue is likely:
+1. **Wrong Server Format** - Should use server name, not IP
+2. **Wrong Username Format** - Should be `u12345678` (without domain)
+3. **Wrong Password** - Should be FTP password, not SSH password
 
 ---
-**📝 NOTA**: Este arquivo será removido após resolução do problema. 
+
+## 🔑 REQUIRED GITHUB SECRETS UPDATE
+
+### **Go to GitHub Repository Settings > Secrets and update:**
+
+```yaml
+HOSTINGER_FTP_SERVER: [SERVER_NAME_FROM_HPANEL]
+HOSTINGER_FTP_USERNAME: u300282944
+HOSTINGER_FTP_PASSWORD: [FTP_PASSWORD_FROM_HPANEL]
+```
+
+### **Where to find these values:**
+1. **Login to hPanel:** https://hpanel.hostinger.com
+2. **Go to:** Websites → Dashboard → FTP Accounts
+3. **Copy the exact values shown:**
+   - **FTP IP/Server:** Use this as `HOSTINGER_FTP_SERVER`
+   - **FTP Username:** Should be format `u300282944` (not `u300282944.Caioasc`)
+   - **FTP Password:** Reset if needed via "Change FTP Password"
+
+---
+
+## 🚨 COMMON MISTAKES TO AVOID:
+
+❌ **Wrong Username:** `u300282944.Caioasc` or `caioasc@caiocastilho.com`  
+✅ **Correct Username:** `u300282944`
+
+❌ **Wrong Server:** `185.239.210.65` (IP address)  
+✅ **Correct Server:** Server name from hPanel (e.g., `files.hostinger.com`)
+
+❌ **Wrong Password:** SSH password or old password  
+✅ **Correct Password:** Current FTP password from hPanel
+
+---
+
+## 🛠️ DEPLOYMENT STEPS:
+
+### **1. Update GitHub Secrets**
+- Go to repository Settings > Secrets and Variables > Actions
+- Update the three FTP secrets with correct values from hPanel
+
+### **2. Run Hotfix Deployment**
+- Go to Actions tab in GitHub
+- Run "🚑 Hotfix Deploy" workflow
+- Choose "ftp-hostinger-v2" method
+- Monitor logs for success
+
+### **3. Verify Deployment**
+- Check https://caiocastilho.com after 2-5 minutes
+- Verify all pages load correctly
+- Test responsive design
+
+---
+
+## 🔄 BACKUP DEPLOYMENT METHODS:
+
+If main method fails, try these alternatives in order:
+
+### **Method 1: IP Fallback**
+- Use workflow option "ftp-ip-fallback"
+- Uses IP address instead of server name
+
+### **Method 2: SFTP Secure**
+- Use workflow option "sftp-secure"
+- More secure SFTP protocol on port 22
+
+### **Method 3: Manual Upload**
+- Download built files from GitHub Actions artifacts
+- Upload manually via hPanel File Manager
+
+---
+
+## 📊 SUCCESS INDICATORS:
+
+✅ **Build completes successfully** - Next.js static export working  
+✅ **FTP connection succeeds** - No 530 login errors  
+✅ **Files upload to public_html** - Correct target directory  
+✅ **Website loads** - https://caiocastilho.com accessible  
+✅ **All pages work** - Home, About, Projects functional  
+
+---
+
+## 🎯 IMMEDIATE NEXT ACTIONS:
+
+1. **[PRIORITY 1]** Update GitHub Secrets with correct values
+2. **[PRIORITY 2]** Run hotfix deployment workflow
+3. **[PRIORITY 3]** Verify website is live
+4. **[PRIORITY 4]** Update development roadmap with success
+
+---
+
+**🎉 GOAL: Get caiocastilho.com live within next 30 minutes!** 

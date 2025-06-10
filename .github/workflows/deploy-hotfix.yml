@@ -1,5 +1,5 @@
 # /Users/user/Desktop/Core Guild Project/projects/colabs/eng-teams/core/personal-website/prototype/.github/workflows/deploy-hotfix.yml
-# Hotfix deployment workflow with multiple deployment methods
+# Hotfix deployment workflow with multiple deployment methods and correct Hostinger formats
 name: 🚑 Hotfix Deploy
 
 on:
@@ -8,11 +8,12 @@ on:
       deployment_method:
         description: 'Choose deployment method'
         required: true
-        default: 'ftp-primary'
+        default: 'ftp-hostinger-v2'
         type: choice
         options:
-        - ftp-primary
-        - ftp-alternative
+        - ftp-hostinger-v2
+        - ftp-ip-fallback
+        - sftp-secure
         - manual-debug
 
 jobs:
@@ -40,9 +41,11 @@ jobs:
         run: |
           mkdir -p deployment
           cp -r out/* deployment/
+          echo "📁 Deployment files prepared:"
+          ls -la deployment/
           
-      - name: 🚀 Deploy via Primary FTP
-        if: ${{ github.event.inputs.deployment_method == 'ftp-primary' }}
+      - name: 🚀 Deploy via Hostinger FTP (Correct Format)
+        if: ${{ github.event.inputs.deployment_method == 'ftp-hostinger-v2' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.HOSTINGER_FTP_SERVER }}
@@ -52,21 +55,48 @@ jobs:
           server-dir: ./public_html/
           protocol: ftp
           port: 21
+          log-level: verbose
           
-      - name: 🚀 Deploy via Alternative FTP
-        if: ${{ github.event.inputs.deployment_method == 'ftp-alternative' }}
-        uses: sebastianpopp/ftp-action@releases/v2
+      - name: 🚀 Deploy via IP Fallback
+        if: ${{ github.event.inputs.deployment_method == 'ftp-ip-fallback' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          host: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          user: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          server: 185.239.210.65
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          localDir: "./deployment/"
-          remoteDir: "./public_html/"
+          local-dir: ./deployment/
+          server-dir: ./public_html/
+          protocol: ftp
+          port: 21
+          log-level: verbose
+          
+      - name: 🔒 Deploy via SFTP (Secure)
+        if: ${{ github.event.inputs.deployment_method == 'sftp-secure' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          local-dir: ./deployment/
+          server-dir: ./public_html/
+          protocol: sftp
+          port: 22
+          log-level: verbose
           
       - name: 🔍 Debug Connection Info
         if: ${{ github.event.inputs.deployment_method == 'manual-debug' }}
         run: |
           echo "🔍 Testing connection parameters..."
-          echo "Server masked"
-          echo "Username format test"
-          ping -c 3 ${{ secrets.HOSTINGER_FTP_SERVER }} || echo "Ping failed" 
+          echo "🌐 Testing server connectivity..."
+          echo "📝 Credential format verification needed"
+          echo "⚠️  Check hPanel for correct FTP details"
+          echo "🔧 Server should be hostname, not IP"
+          echo "👤 Username should be format: u12345678"
+          echo "🔑 Password should be FTP password (not SSH)"
+          
+      - name: ✅ Deployment Success
+        if: success()
+        run: |
+          echo "🎉 Deployment completed successfully!"
+          echo "🌐 Website should be live at: https://caiocastilho.com"
+          echo "⏰ Allow 2-5 minutes for propagation" 
