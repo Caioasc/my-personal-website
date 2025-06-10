@@ -8,9 +8,10 @@ on:
       deployment_method:
         description: 'Choose deployment method'
         required: true
-        default: 'ftp-hostinger-v2'
+        default: 'auto-detect-server'
         type: choice
         options:
+        - auto-detect-server
         - ftp-hostinger-v2
         - ftp-ip-fallback
         - sftp-secure
@@ -43,6 +44,46 @@ jobs:
           cp -r out/* deployment/
           echo "📁 Deployment files prepared:"
           ls -la deployment/
+          
+      - name: 🔍 Auto-Detect Server Format
+        if: ${{ github.event.inputs.deployment_method == 'auto-detect-server' }}
+        run: |
+          echo "🔍 Testing server connectivity..."
+          echo "Testing format 1: files.hostinger.com"
+          ping -c 2 files.hostinger.com || echo "❌ files.hostinger.com failed"
+          echo "Testing format 2: IP address"
+          ping -c 2 185.239.210.65 || echo "❌ IP address failed"
+          echo "Testing format 3: ftp.hostinger.com"
+          ping -c 2 ftp.hostinger.com || echo "❌ ftp.hostinger.com failed"
+          echo "📝 Use the working server format in GitHub Secrets"
+          
+      - name: 🚀 Deploy via files.hostinger.com
+        if: ${{ github.event.inputs.deployment_method == 'auto-detect-server' }}
+        continue-on-error: true
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: files.hostinger.com
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          local-dir: ./deployment/
+          server-dir: ./public_html/
+          protocol: ftp
+          port: 21
+          log-level: verbose
+          
+      - name: 🚀 Deploy via IP Fallback (if first failed)
+        if: ${{ github.event.inputs.deployment_method == 'auto-detect-server' && failure() }}
+        continue-on-error: true
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: 185.239.210.65
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          local-dir: ./deployment/
+          server-dir: ./public_html/
+          protocol: ftp
+          port: 21
+          log-level: verbose
           
       - name: 🚀 Deploy via Hostinger FTP (Correct Format)
         if: ${{ github.event.inputs.deployment_method == 'ftp-hostinger-v2' }}
@@ -93,6 +134,11 @@ jobs:
           echo "🔧 Server should be hostname, not IP"
           echo "👤 Username should be format: u12345678"
           echo "🔑 Password should be FTP password (not SSH)"
+          echo ""
+          echo "🧪 Testing common Hostinger server formats:"
+          ping -c 2 files.hostinger.com || echo "❌ files.hostinger.com failed"
+          ping -c 2 ftp.hostinger.com || echo "❌ ftp.hostinger.com failed" 
+          ping -c 2 185.239.210.65 || echo "❌ IP failed"
           
       - name: ✅ Deployment Success
         if: success()
