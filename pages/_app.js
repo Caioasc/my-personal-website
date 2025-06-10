@@ -1,11 +1,13 @@
-import 'tailwindcss/tailwind.css'
-import { AnimateSharedLayout } from 'framer-motion'
+// /Users/user/Desktop/Core Guild Project/projects/colabs/eng-teams/core/personal-website/prototype/pages/_app.js
+
+import '../styles/globals.css'
+import { LayoutGroup } from 'framer-motion'
 
 function MyApp({ Component, pageProps }) {
   return (
-    <AnimateSharedLayout>
+    <LayoutGroup>
       <Component {...pageProps} />
-    </AnimateSharedLayout>
+    </LayoutGroup>
   )
 }
 
