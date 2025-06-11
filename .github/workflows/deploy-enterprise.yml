@@ -252,16 +252,29 @@ jobs:
           fi
 
       # GITHUB ACTIONS OPTIMIZED DEPLOYMENT (NEW DEFAULT)
-      - name: 🎯 GitHub Actions Optimized Deployment (SFTP BYPASS)
+      # NOTE: SFTP is NOT possible because Hostinger blocks port 22 for this plan. All deployments must use FTP (port 21).
+      - name: 🎯 GitHub Actions Optimized Deployment (FTP ONLY - SFTP BLOCKED BY HOSTINGER)
         if: ${{ github.event.inputs.deployment_strategy == 'github-actions-optimized' }}
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ env.HOSTINGER_PRIMARY_IP }}
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          local_path: './deployment/*'
-          remote_path: '/public_html/'
-          sftpArgs: '-o ConnectTimeout=5'
+          local-dir: ./deployment/
+          server-dir: ./public_html/
+          protocol: ftp
+          port: 21
+          log-level: verbose
+          dangerous-clean-slate: true
+          timeout: ${{ env.DEPLOYMENT_TIMEOUT }}
+          security: loose
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.DS_Store
+            **/Thumbs.db
+            **/*.map
 
       # ENTERPRISE STANDARD DEPLOYMENT 
       - name: 🏢 Enterprise Standard Deployment
