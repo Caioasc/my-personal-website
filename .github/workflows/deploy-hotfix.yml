@@ -158,16 +158,8 @@ jobs:
       # ===============================
       # MULTI-PROTOCOL FALLBACK SYSTEM
       # ===============================
-      - name: 🔄 Multi-Protocol Fallback Deployment
+      - name: 🔄 Multi-Protocol Fallback - Step 1
         if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' }}
-        run: |
-          echo "🔄 MULTI-PROTOCOL FALLBACK SYSTEM"
-          echo "================================"
-          
-          # Protocol 1: Standard FTP
-          echo "🧪 Attempting Protocol 1: Standard FTP"
-          set +e  # Don't exit on error
-          
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         continue-on-error: true
         id: ftp-attempt
@@ -182,7 +174,7 @@ jobs:
           timeout: 90000
           security: loose
           
-      - name: 🔄 Fallback: IP-Based FTP
+      - name: 🔄 Fallback IP-Based FTP
         if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' && steps.ftp-attempt.outcome == 'failure' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         continue-on-error: true
@@ -198,7 +190,7 @@ jobs:
           timeout: 90000
           security: loose
 
-      - name: 🔒 Fallback: FTPS Secure
+      - name: 🔒 Fallback FTPS Secure
         if: ${{ github.event.inputs.deployment_strategy == 'multi-protocol-fallback' && steps.ftp-attempt.outcome == 'failure' && steps.ftp-ip-attempt.outcome == 'failure' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -214,7 +206,7 @@ jobs:
       # ===============================
       # DEBUG INTENSIVE MODE
       # ===============================
-      - name: 🔧 Debug Intensive Deployment
+      - name: 🔧 Debug Intensive Analysis
         if: ${{ github.event.inputs.deployment_strategy == 'debug-intensive' }}
         run: |
           echo "🔧 DEBUG INTENSIVE MODE ACTIVATED"
@@ -238,7 +230,6 @@ jobs:
           # Connection testing with verbose output
           echo "🧪 Connection Testing:"
           curl -v ftp://files.hostinger.com/ --user "${{ secrets.HOSTINGER_FTP_USERNAME }}:${{ secrets.HOSTINGER_FTP_PASSWORD }}" --connect-timeout 30 || echo "Direct FTP test failed"
-          
         continue-on-error: true
         
       - name: 🔧 Debug Deployment with Maximum Logging
