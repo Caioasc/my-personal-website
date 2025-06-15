@@ -140,7 +140,7 @@ MIT – see [LICENSE](LICENSE) - This project is licensed under the MIT License.
 
 ## 📞 Contact
 
-[LinkedIn](https://www.linkedin.com/in/caiocastilho/) | [caiocastilho.com](https://caiocastilho.com)  
+[LinkedIn](https://www.linkedin.com/in/caio-a-s-castilho/) | [caiocastilho.com](https://caiocastilho.com)  
 Feel free to reach out for collaborations or questions!
 
 ---

@@ -12,12 +12,19 @@ export function useLocalStorage(key, initialValue) {
     try {
       // Get from local storage by key
       const item = window.localStorage.getItem(key)
-      if (item) {
+      // Only parse if item is not null, undefined, or empty string
+      if (item !== null && item !== undefined && item !== '') {
+        try {
         setStoredValue(JSON.parse(item))
+        } catch (parseError) {
+          // If parsing fails, log and use initial value
+          console.error('Failed to parse localStorage value for key:', key, parseError)
+          setStoredValue(initialValue)
+        }
       }
     } catch (error) {
       // If error, keep initial value
-      console.log(error)
+      console.error('Error accessing localStorage for key:', key, error)
     }
   }, [key])
 
@@ -33,7 +40,7 @@ export function useLocalStorage(key, initialValue) {
       window.localStorage.setItem(key, JSON.stringify(valueToStore))
     } catch (error) {
       // A more advanced implementation would handle the error case
-      console.log(error)
+      console.error('Error setting localStorage for key:', key, error)
     }
   }
 

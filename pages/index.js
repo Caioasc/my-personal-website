@@ -3,6 +3,7 @@
 import Layout from '../components/layout'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import SocialIcons from '../components/SocialIcons' // Social media icons component
 
 export default function Home() {
   return (
@@ -24,14 +25,6 @@ export default function Home() {
           <h3 className="text-sm tracking-wider text-center text-gray-500 dark:text-gray-400 mt-2">
             PROJECT MANAGEMENT & SCALABILITY SPECIALIST
           </h3>
-          <p className="mt-4 text-sm text-center text-gray-600 dark:text-gray-300 max-w-md leading-relaxed">
-            Passionate about engineering and innovation. I love planning, reviewing, and starting and expanding businesses. 
-            My expertise lies in project management, scalability development, and starting and expanding businesses.
-          </p>
-          <p className="mt-2 text-sm text-center text-gray-600 dark:text-gray-300 max-w-md leading-relaxed">
-            I enjoy science, surfing, vibe coding, experiments, and extreme sports. 
-            The best thing in my life was becoming a father.
-          </p>
         </div>
       </motion.div>
     </Layout>
