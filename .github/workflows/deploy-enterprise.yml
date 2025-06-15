@@ -3,6 +3,10 @@ name: 🏢 Enterprise Deploy Pipeline - Advanced Network Optimization
 on:
   workflow_dispatch:
     inputs:
+      version:
+        description: 'Release version (e.g., v1.2.3)'
+        required: true
+        default: 'v1.0.0'
       deployment_strategy:
         description: 'Choose deployment strategy'
         required: true
@@ -16,6 +20,8 @@ on:
         - debug-intensive-v2
         - force-standard-ftp
         - hostinger-ip-direct
+  release:
+    types: [published]
 
 env:
   NODE_VERSION: '18.x'
@@ -705,3 +711,46 @@ jobs:
           echo "   ✅ Multi-protocol fallback system active"
           echo ""
           echo "🚀 Website is now live at: https://caiocastilho.com"
+
+      - name: 📦 Create release package
+        run: |
+          mkdir release-package
+          cp -r .next release-package/
+          cp -r public release-package/
+          cp package*.json release-package/
+          tar -czf personal-website-${{ github.event.inputs.version }}.tar.gz release-package/
+
+      - name: 📝 Generate changelog
+        id: changelog
+        run: |
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: 🏷️ Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          release_name: Release ${{ github.event.inputs.version }}
+          body: |
+            ## 🚀 Changes in this Release
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ## 📦 Deployment
+            - ✅ Automatically deployed to production
+            - 🌐 Live at: https://caiocastilho.com
+          draft: false
+          prerelease: false
+
+      - name: 📤 Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./personal-website-${{ github.event.inputs.version }}.tar.gz
+          asset_name: personal-website-${{ github.event.inputs.version }}.tar.gz
+          asset_content_type: application/gzip
