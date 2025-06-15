@@ -261,7 +261,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           local-dir: ./deployment/
-          server-dir: ./public_html/
+          server-dir: ./
           protocol: ftp
           port: 21
           log-level: verbose
@@ -285,7 +285,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           local-dir: ./deployment/
-          server-dir: ./public_html/
+          server-dir: ./
           protocol: ftp
           port: 21
           log-level: verbose
@@ -309,7 +309,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           local-dir: ./deployment/
-          server-dir: ./public_html/
+          server-dir: ./
           protocol: ftp
           port: 21
           log-level: verbose
@@ -333,7 +333,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           local-dir: ./deployment/
-          server-dir: ./public_html/
+          server-dir: ./
           protocol: ftp
           port: 21
           log-level: verbose
@@ -359,7 +359,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           local-dir: ./deployment/
-          server-dir: ./public_html/
+          server-dir: ./
           protocol: ftp
           port: 21
           timeout: 180000
@@ -375,7 +375,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           local-dir: ./deployment/
-          server-dir: ./public_html/
+          server-dir: ./
           protocol: ftp
           port: 21
           timeout: 180000
@@ -391,7 +391,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           local-dir: ./deployment/
-          server-dir: ./public_html/
+          server-dir: ./
           protocol: ftp
           port: 21
           timeout: 180000
@@ -407,7 +407,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           local-dir: ./deployment/
-          server-dir: ./public_html/
+          server-dir: ./
           protocol: ftps
           port: 990
           timeout: 240000
@@ -560,7 +560,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           local-dir: ./deployment/
-          server-dir: ./public_html/
+          server-dir: ./
           protocol: ftp
           port: 21
           log-level: verbose
