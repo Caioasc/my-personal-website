@@ -723,9 +723,30 @@ jobs:
       - name: 📝 Generate changelog
         id: changelog
         run: |
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Correct multi-line output for GitHub Actions (robust, future-proof)
+          {
+            echo 'changelog<<EOF'
+            echo "Your"
+            echo "multi-line"
+            echo "changelog"
+            echo "goes here"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 🏷️ Create tag if not exists
+        run: |
+          git fetch --tags
+          if git rev-parse "refs/tags/${{ github.event.inputs.version }}" >/dev/null 2>&1; then
+            echo "Tag ${{ github.event.inputs.version }} already exists. Skipping tag creation."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag ${{ github.event.inputs.version }}
+            git push origin ${{ github.event.inputs.version }}
+            echo "Tag ${{ github.event.inputs.version }} created and pushed."
+          fi
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
 
       - name: 🏷️ Create GitHub Release
         id: create_release
