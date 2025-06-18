@@ -211,6 +211,8 @@ jobs:
     steps:
       - name: 📋 Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
         
       - name: 📦 Setup Node.js Enterprise
         uses: actions/setup-node@v4
@@ -742,7 +744,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git tag ${{ github.event.inputs.version }}
-            git push origin ${{ github.event.inputs.version }}
+            git push origin ${{ github.event.inputs.version }}:refs/tags/${{ github.event.inputs.version }}
             echo "Tag ${{ github.event.inputs.version }} created and pushed."
           fi
         env:
