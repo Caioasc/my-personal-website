@@ -209,6 +209,26 @@ jobs:
     needs: advanced-connectivity-analysis
     
     steps:
+      - name: 🏷️ Resolve Version (supports manual and release triggers)
+        id: resolve-version
+        run: |
+          # Robust version resolution for both workflow_dispatch and release triggers
+          VERSION=""
+          if [ ! -z "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [ ! -z "${{ github.event.release.tag_name }}" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          fi
+          
+          if [ -z "$VERSION" ]; then
+            echo "::error::Version could not be resolved from workflow_dispatch or release trigger"
+            exit 1
+          fi
+          
+          echo "RESOLVED_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Resolved version: $VERSION"
+        shell: bash
+
       - name: 📋 Checkout Repository
         uses: actions/checkout@v4
         with:
@@ -720,7 +740,7 @@ jobs:
           cp -r .next release-package/
           cp -r public release-package/
           cp package*.json release-package/
-          tar -czf personal-website-${{ github.event.inputs.version }}.tar.gz release-package/
+          tar -czf personal-website-${{ github.event.inputs.deployment_strategy }}.tar.gz release-package/
 
       - name: 📝 Generate changelog
         id: changelog
@@ -737,20 +757,20 @@ jobs:
 
       - name: 🏷️ Create tag if not exists
         run: |
-          echo "Tag to be created: ${{ github.event.inputs.version }}"
-          if [ -z "${{ github.event.inputs.version }}" ]; then
+          echo "Tag to be created: ${{ github.event.inputs.deployment_strategy }}"
+          if [ -z "${{ github.event.inputs.deployment_strategy }}" ]; then
             echo "ERROR: version input is empty!"
             exit 1
           fi
           git fetch --tags
-          if git rev-parse "refs/tags/${{ github.event.inputs.version }}" >/dev/null 2>&1; then
-            echo "Tag ${{ github.event.inputs.version }} already exists. Skipping tag creation."
+          if git rev-parse "refs/tags/${{ github.event.inputs.deployment_strategy }}" >/dev/null 2>&1; then
+            echo "Tag ${{ github.event.inputs.deployment_strategy }} already exists. Skipping tag creation."
           else
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git tag ${{ github.event.inputs.version }}
-            git push origin ${{ github.event.inputs.version }}
-            echo "Tag ${{ github.event.inputs.version }} created and pushed."
+            git tag ${{ github.event.inputs.deployment_strategy }}
+            git push origin ${{ github.event.inputs.deployment_strategy }}
+            echo "Tag ${{ github.event.inputs.deployment_strategy }} created and pushed."
           fi
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
@@ -761,8 +781,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
-          tag_name: ${{ github.event.inputs.version }}
-          release_name: Release ${{ github.event.inputs.version }}
+          tag_name: ${{ github.event.inputs.deployment_strategy }}
+          release_name: Release ${{ github.event.inputs.deployment_strategy }}
           body: |
             ## 🚀 Changes in this Release
 
@@ -780,8 +800,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./personal-website-${{ github.event.inputs.version }}.tar.gz
-          asset_name: personal-website-${{ github.event.inputs.version }}.tar.gz
+          asset_path: ./personal-website-${{ github.event.inputs.deployment_strategy }}.tar.gz
+          asset_name: personal-website-${{ github.event.inputs.deployment_strategy }}.tar.gz
           asset_content_type: application/gzip
 
       - name: 🔄 Validate FTP Credentials (pre-deploy)
