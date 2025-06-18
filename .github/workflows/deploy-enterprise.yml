@@ -737,6 +737,11 @@ jobs:
 
       - name: 🏷️ Create tag if not exists
         run: |
+          echo "Tag to be created: ${{ github.event.inputs.version }}"
+          if [ -z "${{ github.event.inputs.version }}" ]; then
+            echo "ERROR: version input is empty!"
+            exit 1
+          fi
           git fetch --tags
           if git rev-parse "refs/tags/${{ github.event.inputs.version }}" >/dev/null 2>&1; then
             echo "Tag ${{ github.event.inputs.version }} already exists. Skipping tag creation."
@@ -744,7 +749,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git tag ${{ github.event.inputs.version }}
-            git push origin ${{ github.event.inputs.version }}:refs/tags/${{ github.event.inputs.version }}
+            git push origin ${{ github.event.inputs.version }}
             echo "Tag ${{ github.event.inputs.version }} created and pushed."
           fi
         env:
@@ -778,3 +783,11 @@ jobs:
           asset_path: ./personal-website-${{ github.event.inputs.version }}.tar.gz
           asset_name: personal-website-${{ github.event.inputs.version }}.tar.gz
           asset_content_type: application/gzip
+
+      - name: 🔄 Validate FTP Credentials (pre-deploy)
+        if: ${{ github.event.inputs.deployment_strategy == 'github-actions-optimized' || github.event.inputs.deployment_strategy == 'enterprise-standard' || github.event.inputs.deployment_strategy == 'force-standard-ftp' || github.event.inputs.deployment_strategy == 'hostinger-ip-direct' }}
+        run: |
+          if [ -z "${{ secrets.HOSTINGER_FTP_USERNAME }}" ] || [ -z "${{ secrets.HOSTINGER_FTP_PASSWORD }}" ]; then
+            echo "FTP credentials are missing!"
+            exit 1
+          fi
