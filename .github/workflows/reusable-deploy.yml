@@ -38,7 +38,7 @@ jobs:
       - name: 🚀 Deploy to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: files.hostinger.com
+          server: 185.239.210.65
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           local-dir: ./out/
@@ -47,4 +47,4 @@ jobs:
           port: 21
           log-level: verbose
           dangerous-clean-slate: true
-          timeout: 300000 
+          timeout: 300000
