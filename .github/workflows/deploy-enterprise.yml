@@ -219,13 +219,12 @@ jobs:
           elif [ ! -z "${{ github.event.release.tag_name }}" ]; then
             VERSION="${{ github.event.release.tag_name }}"
           fi
-          
           if [ -z "$VERSION" ]; then
             echo "::error::Version could not be resolved from workflow_dispatch or release trigger"
             exit 1
           fi
-          
-          echo "RESOLVED_VERSION=$VERSION" >> $GITHUB_ENV
+          # Using step outputs is more reliable than environment variables for passing data between steps.
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Resolved version: $VERSION"
         shell: bash
 
@@ -740,7 +739,7 @@ jobs:
           cp -r .next release-package/
           cp -r public release-package/
           cp package*.json release-package/
-          tar -czf personal-website-${{ github.event.inputs.deployment_strategy }}.tar.gz release-package/
+          tar -czf personal-website-${{ steps.resolve-version.outputs.version }}.tar.gz release-package/
 
       - name: 📝 Generate changelog
         id: changelog
@@ -757,32 +756,35 @@ jobs:
 
       - name: 🏷️ Create tag if not exists
         run: |
-          echo "Tag to be created: ${{ github.event.inputs.deployment_strategy }}"
-          if [ -z "${{ github.event.inputs.deployment_strategy }}" ]; then
+          # Use the resolved version from the step output for greater reliability.
+          VERSION_TAG="${{ steps.resolve-version.outputs.version }}"
+          echo "Tag to be created: $VERSION_TAG"
+
+          if [ -z "$VERSION_TAG" ]; then
             echo "ERROR: version input is empty!"
             exit 1
           fi
+
           git fetch --tags
-          if git rev-parse "refs/tags/${{ github.event.inputs.deployment_strategy }}" >/dev/null 2>&1; then
-            echo "Tag ${{ github.event.inputs.deployment_strategy }} already exists. Skipping tag creation."
+          if git rev-parse "refs/tags/$VERSION_TAG" >/dev/null 2>&1; then
+            echo "Tag $VERSION_TAG already exists. Skipping tag creation."
           else
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git tag ${{ github.event.inputs.deployment_strategy }}
-            git push origin ${{ github.event.inputs.deployment_strategy }}
-            echo "Tag ${{ github.event.inputs.deployment_strategy }} created and pushed."
+            git tag "$VERSION_TAG"
+            git push origin "$VERSION_TAG"
+            echo "Tag $VERSION_TAG created and pushed."
           fi
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
-
       - name: 🏷️ Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
-          tag_name: ${{ github.event.inputs.deployment_strategy }}
-          release_name: Release ${{ github.event.inputs.deployment_strategy }}
+          tag_name: ${{ steps.resolve-version.outputs.version }}
+          release_name: Release ${{ steps.resolve-version.outputs.version }}
           body: |
             ## 🚀 Changes in this Release
 
@@ -800,8 +802,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./personal-website-${{ github.event.inputs.deployment_strategy }}.tar.gz
-          asset_name: personal-website-${{ github.event.inputs.deployment_strategy }}.tar.gz
+          asset_path: ./personal-website-${{ steps.resolve-version.outputs.version }}.tar.gz
+          asset_name: personal-website-${{ steps.resolve-version.outputs.version }}.tar.gz
           asset_content_type: application/gzip
 
       - name: 🔄 Validate FTP Credentials (pre-deploy)
@@ -811,3 +813,12 @@ jobs:
             echo "FTP credentials are missing!"
             exit 1
           fi
+
+      - name: 📋 Deployment Summary
+        if: always()
+        run: |
+          echo "================ DEPLOYMENT SUMMARY ================"
+          echo "Version: ${{ steps.resolve-version.outputs.version }}"
+          echo "Deployment Strategy: ${{ github.event.inputs.deployment_strategy }}"
+          echo "Deployment Status: ${{ job.status }}"
+          echo "===================================================="
