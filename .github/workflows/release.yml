@@ -1,75 +1,48 @@
 # /Users/user/Desktop/Core Guild Project/projects/colabs/eng-teams/core/personal-website/prototype/.github/workflows/release.yml
-
-name: 🏷️ Release Management
+# Purpose: Manually create a new versioned Git tag and GitHub Release.
+name: 📦 Manual Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.2.3)'
+        required: true
 
 jobs:
-  release:
-    name: 🚀 Create Release
+  create-release:
+    name: 📦 Create Release
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write # Required to create tags and releases
     steps:
-      - name: 📥 Checkout code
+      - name:  checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18.x'
-          cache: 'npm'
-          
-      - name: 📚 Install dependencies
-        run: npm ci
-        
-      - name: 🏗️ Build for release
-        run: npm run build
-        
-      - name: 📦 Create release package
+          fetch-depth: 0 # Required to get all tags
+
+      - name: 🛡️ Check if release already exists
+        id: check_release
         run: |
-          mkdir release-package
-          cp -r .next release-package/
-          cp -r public release-package/
-          cp package*.json release-package/
-          tar -czf personal-website-${{ github.ref_name }}.tar.gz release-package/
-          
-      - name: 📝 Generate changelog
+          if gh release view ${{ github.event.inputs.version }} > /dev/null 2>&1; then
+            echo "::error::Release ${{ github.event.inputs.version }} already exists."
+            exit 1
+          else
+            echo "Release ${{ github.event.inputs.version }} does not exist. Proceeding."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📝 Generate Changelog (Placeholder)
         id: changelog
         run: |
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          
-      - name: 🏷️ Create GitHub Release
-        uses: actions/create-release@v1
+          # For a production-grade setup, use a tool like 'git-cliff' to auto-generate this.
+          echo "Automated release for version ${{ github.event.inputs.version }}." > changelog.md
+
+      - name: 🚀 Create GitHub Release and Tag
+        run: |
+          gh release create ${{ github.event.inputs.version }} \
+            --title "Release ${{ github.event.inputs.version }}" \
+            --notes-file changelog.md
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          body: |
-            ## 🚀 Changes in this Release
-            
-            ${{ steps.changelog.outputs.changelog }}
-            
-            ## 📦 Deployment
-            - ✅ Automatically deployed to production
-            - 🌐 Live at: https://caiocastilho.com
-            
-          draft: false
-          prerelease: false
-          
-      - name: 📤 Upload release assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./personal-website-${{ github.ref_name }}.tar.gz
-          asset_name: personal-website-${{ github.ref_name }}.tar.gz
-          asset_content_type: application/gzip 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

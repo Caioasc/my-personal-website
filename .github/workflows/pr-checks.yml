@@ -1,10 +1,12 @@
 # /Users/user/Desktop/Core Guild Project/projects/colabs/eng-teams/core/personal-website/prototype/.github/workflows/pr-checks.yml
-
-name: 🔍 Pull Request Checks
+# Purpose: Ensures code quality on every pull request before merging.
+name: 🧐 PR Checks
 
 on:
   pull_request:
-    branches: [ main, develop ]
+    branches:
+      - main
+  workflow_dispatch: # Allows manual triggering for testing
 
 jobs:
   # ===============================
@@ -77,3 +79,22 @@ jobs:
               repo: context.repo.repo,
               body: '🔍 **Preview Build Complete!** ✅\n\n📊 Build completed successfully for this PR.\n🚀 Ready for review and merge!'
             }) 
+
+  build:
+    name: 🏗️ Build Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name:  checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: 📚 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build application
+        run: npm run build 
