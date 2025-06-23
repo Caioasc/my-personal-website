@@ -22,6 +22,12 @@ export default function Navigation() {
           ABOUT
         </button>
       </Link>
+      {/* New button with plus sign for future customization */}
+      <Link href="#">
+        <button className="w-8 py-1 text-xl leading-6 tracking-widest border border-gray-300 rounded-full dark:hover:border-pink-500 dark:border-white focus:outline-none hover:text-lightBlue-600 hover:border-lightBlue-600 dark:hover:text-pink-500 flex items-center justify-center">
+          +
+        </button>
+      </Link>
     </motion.div>
   )
 }
