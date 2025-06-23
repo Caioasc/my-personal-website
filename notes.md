@@ -2,51 +2,35 @@
 
 # 🚀 Deployment & Maintenance Notes
 
-## 1. Commit & Push Changes
+## 1. How It Works Now (The New Process)
 
-```sh
-git add .
-git commit -m "Chore(ci): update site and workflows. Don't forget to commit"
-git push
-```
+Our CI/CD system has been professionally refactored for automation and reliability.
 
-- **Always use the commit message convention:**
-  - `Feat(component): add new component`
-  - `Fix(api): fix API error`
-  - `Docs(readme): update Readme`
-  - `Refactor(utils): refactor utils`
-  - `Style(tailwind): add new Tailwind class`
-  - `Test(unit): add unit test`
-  - `Chore(deps): update dependencies`
-  - **Last line:** `Don't forget to commit`
+- **Continuous Deployment:** Every `git push` to the `main` branch automatically triggers the `deploy.yml` workflow. This builds the project and deploys it to production at `caiocastilho.com`. You no longer need to run a manual deployment.
+- **Manual Releases:** To create a formal version (Git tag and GitHub Release), you manually trigger the `release.yml` workflow. This is for versioning, not for deploying.
 
 ---
 
-## 2. Deploy & Release (GitHub Actions)
+## 2. How to Run Workflows Manually
 
-### Manual Trigger via GitHub CLI
+### A. Create a New Release (The Main Manual Action)
+
+Use this command to create a new version tag and a corresponding GitHub Release.
 
 ```sh
-gh workflow run "deploy-enterprise.yml" \
-  --field version="vX.Y.Z" \
-  --field deployment_strategy="github-actions-optimized"
+gh workflow run "release.yml" --field version="vX.Y.Z"
 ```
 
-- Replace `vX.Y.Z` with your release version (e.g., `v1.0.2`).
-- This will:
-  - Build the project
-  - Generate changelog
-  - Create a GitHub Release with artifact
-  - Deploy to Hostinger via FTP
+- Replace `vX.Y.Z` with your new semantic version (e.g., `v1.1.3`).
+- This command **only creates the release**, it does not deploy. Deployment is automatic.
 
-### Manual Trigger via GitHub UI
+### B. Run Network Diagnostics (For Debugging Only)
 
-1. Go to your repository on GitHub.
-2. Click the **Actions** tab.
-3. Select **🏢 Enterprise Deploy Pipeline - Advanced Network Optimization**.
-4. Click **Run workflow** (top right).
-5. Enter the **version** (e.g., `v1.0.2`) and choose the deployment strategy.
-6. Click **Run workflow**.
+If you are experiencing connectivity issues, you can run the diagnostics workflow.
+
+```sh
+gh workflow run "diagnostics.yml"
+```
 
 ---
 
@@ -54,17 +38,17 @@ gh workflow run "deploy-enterprise.yml" \
 
 - `HOSTINGER_FTP_USERNAME`
 - `HOSTINGER_FTP_PASSWORD`
-- `HOSTINGER_FTP_SERVER`
+
+*Note: The server is now hardcoded in the workflow for reliability.*
 
 ---
 
 ## 4. Best Practices
 
-- Always increment the version for each deploy.
-- Monitor the Actions tab for errors or failed deployments.
+- **Commit frequently** to the `main` branch to keep the live site updated.
+- After a push, verify the deployment was successful in the **Actions** tab.
 - After successful deploy, verify the site at [https://caiocastilho.com](https://caiocastilho.com).
-- Use only trusted GitHub Actions for deployment (e.g., SamKirkland/FTP-Deploy-Action).
-- Keep this `notes.md` updated with any new commands or procedures.
+- Keep this `notes.md` updated with any new procedures.
 
 ---
 
