@@ -1,8 +1,8 @@
-// /commitlint.config.js
-// Commitlint configuration for enforcing Conventional Commits and project standards
+// /commitlint.config.mjs
+// Commitlint configuration for enforcing Conventional Commits and project standards (ESM)
 // See: https://www.conventionalcommits.org/en/v1.0.0/
 
-module.exports = {
+export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
     // Only allow these types (must be lowercase)
