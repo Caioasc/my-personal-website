@@ -38,4 +38,11 @@ If you find a bug or have a feature request, please open an issue with a clear d
 
 ## Code of Conduct
 
-By participating, you agree to abide by the [Code of Conduct](CODE_OF_CONDUCT.md). 
+By participating, you agree to abide by the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Release Process
+
+- All releases and versioning are handled automatically by **semantic-release**.
+- Do not manually update the version in `package.json` or create GitHub releases/tags.
+- The manual release workflow is deprecated and should not be used.
+- For a release to be published, ensure your commits follow Conventional Commits and are merged to `main`. 

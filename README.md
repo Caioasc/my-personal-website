@@ -98,6 +98,18 @@ pnpm dev
 └── ...
 ```
 
+## 🚀 Deployment & Release Process
+
+This project uses **semantic-release** for all versioning and release automation. Manual versioning or releases are deprecated and should not be used.
+
+### Automated Release Workflow
+- Every push to `main` triggers the semantic-release workflow.
+- The workflow analyzes commit messages, determines the next version, updates `package.json` and `CHANGELOG.md`, creates a GitHub release, and pushes changes back to the repository.
+- **Do not manually edit the version in `package.json` or create releases/tags.**
+- The legacy manual release workflow is deprecated and should not be used for production releases.
+
+See `.github/workflows/semantic-release.yml` and `.releaserc.json` for configuration details.
+
 ## 🚀 Deployment
 
 This project is configured for deployment on Hostinger using MCP (Model Context Protocol) for automation.
