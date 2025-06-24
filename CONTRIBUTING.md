@@ -32,6 +32,41 @@ Thank you for considering contributing to this project! Your help is greatly app
   - `Chore(deps): update dependencies`
 - The last line of every commit message should be: `Don't forget to commit`
 
+### Commit Message Conventions (Required)
+
+All commit messages **must** follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification. This ensures consistency, enables automated changelogs, and keeps our CI/CD workflows reliable.
+
+**Format:**
+```
+<type>(<scope>): <short description>
+```
+
+**Allowed types:**
+- build
+- chore
+- ci
+- docs
+- feat
+- fix
+- perf
+- refactor
+- revert
+- style
+- test
+
+**Rules:**
+- The type must be lowercase.
+- The scope is optional but recommended for clarity.
+- The description should be concise and in English.
+- Do not include process reminders (e.g., "Don't forget to commit") in the commit message body.
+
+**Examples:**
+```
+feat(navigation): persistent top navigation and layout alignment improvements
+fix(api): correct error handling in user endpoint
+docs(readme): update installation instructions
+```
+
 ## Reporting Issues
 
 If you find a bug or have a feature request, please open an issue with a clear description and steps to reproduce (if applicable).

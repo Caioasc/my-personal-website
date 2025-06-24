@@ -11,9 +11,9 @@ config.autoAddCss = false // Prevent FontAwesome from adding CSS automatically (
 function MyApp({ Component, pageProps }) {
   return (
     <NavigationProvider>
-      <LayoutGroup>
-        <Component {...pageProps} />
-      </LayoutGroup>
+    <LayoutGroup>
+      <Component {...pageProps} />
+    </LayoutGroup>
     </NavigationProvider>
   )
 }
