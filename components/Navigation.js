@@ -2,69 +2,77 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useContext } from 'react'
+import { NavigationContext } from '../context/NavigationContext'
 
 /**
  * Navigation component for the main site navigation
- * When + is clicked, Biography and Projects appear next to Home/About in the center nav.
- * They stay visible (with × to close) until × is clicked, even after navigation.
+ * - Initial: HOME, ABOUT, + (centered)
+ * - On +: HOME, ABOUT, BIOGRAFY, PROJECTS, X (top right)
+ * - On X: return to initial state
  * All labels in English.
  */
 export default function Navigation() {
-  const [showExtra, setShowExtra] = useState(false)
-  // Track if the extra menu is open to apply top-right positioning
-  useEffect(() => {
-    // Optionally, add logic here if you want to handle side effects
-  }, [showExtra])
+  const { showNavTopRight, setShowNavTopRight } = useContext(NavigationContext)
+
+  // Initial navigation buttons
+  const initialNavButtons = [
+    { href: '/', label: 'HOME' },
+    { href: '/about', label: 'ABOUT' },
+  ]
+  // Expanded navigation buttons
+  const expandedNavButtons = [
+    { href: '/', label: 'HOME' },
+    { href: '/about', label: 'ABOUT' },
+    { href: '/biography', label: 'BIOGRAFY' },
+    { href: '/projects', label: 'PROJECTS' },
+  ]
+
+  // Render navigation group (centered or top right)
+  const navGroup = (buttons, showClose) => (
+    <div className="flex flex-wrap items-center space-x-2">
+      {buttons.map(({ href, label }) => (
+        <Link key={label} href={href}>
+          <button className="w-24 py-1 text-xs leading-6 tracking-widest border border-gray-300 rounded-full dark:hover:border-pink-500 dark:border-white focus:outline-none hover:text-lightBlue-600 hover:border-lightBlue-600 dark:hover:text-pink-500">
+            {label}
+          </button>
+        </Link>
+      ))}
+      {/* Show X button only when nav is in top right */}
+      {showClose && (
+        <button
+          className="w-8 py-1 text-xl leading-6 tracking-widest border border-gray-300 rounded-full dark:hover:border-pink-500 dark:border-white focus:outline-none hover:text-lightBlue-600 hover:border-lightBlue-600 dark:hover:text-pink-500 flex items-center justify-center ml-2"
+          onClick={() => setShowNavTopRight(false)}
+          aria-label="Close navigation menu"
+        >
+          ×
+        </button>
+      )}
+    </div>
+  )
 
   return (
     <>
-      {/* Top-right floating menu for extra navigation */}
-      {showExtra && (
-        <div className="fixed top-6 right-8 z-50 flex items-center space-x-2 animate-fade-in">
-          <Link href="/biography">
-            <button className="w-24 py-1 text-xs leading-6 tracking-widest border border-gray-300 rounded-full dark:hover:border-pink-500 dark:border-white focus:outline-none hover:text-lightBlue-600 hover:border-lightBlue-600 dark:hover:text-pink-500">
-              BIOGRAPHY
-            </button>
-          </Link>
-          <Link href="/projects">
-            <button className="w-24 py-1 text-xs leading-6 tracking-widest border border-gray-300 rounded-full dark:hover:border-pink-500 dark:border-white focus:outline-none hover:text-lightBlue-600 hover:border-lightBlue-600 dark:hover:text-pink-500">
-              PROJECTS
-            </button>
-          </Link>
-          {/* Close button to hide extra menu */}
-          <button
-            className="w-8 py-1 text-xl leading-6 tracking-widest border border-gray-300 rounded-full dark:hover:border-pink-500 dark:border-white focus:outline-none hover:text-lightBlue-600 hover:border-lightBlue-600 dark:hover:text-pink-500 flex items-center justify-center ml-2"
-            onClick={() => setShowExtra(false)}
-            aria-label="Close extra menu"
-          >
-            ×
-          </button>
+      {/* Top-centered floating navigation group (expanded) */}
+      {showNavTopRight && (
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
+          {navGroup(expandedNavButtons, true)}
         </div>
       )}
-      {/* Main navigation bar (centered) */}
-      <motion.div layoutId="nav" className="flex flex-wrap justify-center leading-6 items-center mt-8">
-        <Link href="/">
-          <button className="w-24 py-1 text-xs leading-6 tracking-widest border border-gray-300 rounded-full dark:hover:border-pink-500 dark:border-white focus:outline-none hover:text-lightBlue-600 hover:border-lightBlue-600 dark:hover:text-pink-500">
-            HOME
-          </button>
-        </Link>
-        <Link href="/about">
-          <button className="w-24 py-1 mx-2 text-xs leading-6 tracking-widest border border-gray-300 rounded-full dark:hover:border-pink-500 dark:border-white focus:outline-none hover:text-lightBlue-600 hover:border-lightBlue-600 dark:hover:text-pink-500">
-            ABOUT
-          </button>
-        </Link>
-        {/* Show plus button only when extra menu is closed */}
-        {!showExtra && (
+      {/* Centered navigation group with + button (initial) */}
+      {!showNavTopRight && (
+        <motion.div layoutId="nav" className="flex flex-wrap justify-center leading-6 items-center mt-8">
+          {navGroup(initialNavButtons, false)}
+          {/* Plus button to open top-right nav */}
           <button
             className="w-8 py-1 text-xl leading-6 tracking-widest border border-gray-300 rounded-full dark:hover:border-pink-500 dark:border-white focus:outline-none hover:text-lightBlue-600 hover:border-lightBlue-600 dark:hover:text-pink-500 flex items-center justify-center ml-2"
-            onClick={() => setShowExtra(true)}
-            aria-label="Open extra menu"
+            onClick={() => setShowNavTopRight(true)}
+            aria-label="Open navigation menu"
           >
             +
           </button>
-        )}
-      </motion.div>
+        </motion.div>
+      )}
     </>
   )
 }

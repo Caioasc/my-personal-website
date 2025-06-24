@@ -79,7 +79,7 @@ export default function Layout({ children }) {
         {/* Main Content Area */}
         <motion.div
           layoutId="border-div"
-          className="flex flex-col items-center justify-center w-full py-8 my-6 border-t border-b border-gray-300 dark:border-white"
+          className="flex flex-col items-center justify-center w-full py-8 my-6 mt-16 border-t border-b border-gray-300 dark:border-white"
         >
           <AnimatePresence mode="wait">{children}</AnimatePresence>
         </motion.div>
