@@ -14,10 +14,7 @@ const nextConfig = {
   // Configure asset prefix for production
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
   
-  // Disable server-side features for static export
-  experimental: {
-    esmExternals: false
-  }
+  // Removed deprecated experimental.esmExternals for Next.js 15+
 }
 
 module.exports = nextConfig 
