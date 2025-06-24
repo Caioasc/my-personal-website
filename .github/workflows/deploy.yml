@@ -1,16 +1,14 @@
 # /.github/workflows/deploy.yml
-# Purpose: Automatically deploys the latest changes from the main branch to production.
-name: 🚀 Continuous Deployment
+# Purpose: Deploys the latest published release to production. Only runs on release events for full traceability.
+name: 🚀 Enterprise Release Deployment
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   deploy-production:
-    name: 🚀 Deploy to Production
+    name: 🚀 Deploy to Production (Release Only)
     uses: ./.github/workflows/reusable-deploy.yml
     with:
       deployment_target: 'Hostinger (Production)'

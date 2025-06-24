@@ -1,6 +1,7 @@
-# /Users/user/Desktop/Core Guild Project/projects/colabs/eng-teams/core/personal-website/prototype/.github/workflows/release.yml
-# Purpose: Manually create a new versioned Git tag and GitHub Release.
-name: 📦 Manual Release
+# /.github/workflows/release.yml
+# Purpose: Enterprise-grade manual release workflow. Creates a versioned Git tag and GitHub Release.
+# Usage: Run manually with a semantic version (e.g., v1.2.3). Deployments are triggered by release publication.
+name: 📦 Enterprise Manual Release
 
 on:
   workflow_dispatch:
@@ -21,6 +22,14 @@ jobs:
         with:
           fetch-depth: 0 # Required to get all tags
 
+      - name: 🧪 Validate version format (semantic versioning)
+        id: validate_version
+        run: |
+          if [[ ! "${{ github.event.inputs.version }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must follow semantic versioning (e.g., v1.2.3)"
+            exit 1
+          fi
+
       - name: 🛡️ Check if release already exists
         id: check_release
         run: |
@@ -33,10 +42,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 📝 Generate Changelog (Placeholder)
+      - name: 📝 Generate Changelog (Manual/Placeholder)
         id: changelog
         run: |
-          # For a production-grade setup, use a tool like 'git-cliff' to auto-generate this.
+          # For a production-grade setup, use a tool like 'git-cliff' or 'semantic-release' to auto-generate this.
           echo "Automated release for version ${{ github.event.inputs.version }}." > changelog.md
 
       - name: 🚀 Create GitHub Release and Tag
